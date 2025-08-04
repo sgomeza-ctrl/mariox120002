@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Mario 3D con sonidos y rotación</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
+  <script>
+    document.addEventListener('touchstart', () => {
+      const scene = document.querySelector('a-scene');
+      if (scene && scene.audioListener && scene.audioListener.context.state === 'suspended') {
+        scene.audioListener.context.resume();
+      }
+    }, { once: true });
+
+    AFRAME.registerComponent('play-sound-on-click', {
+      schema: { soundId: { type: 'string' } },
+      init: function () {
+        const el = this.el;
+        const soundEl = document.querySelector(`#${this.data.soundId}`);
+        el.addEventListener('click', () => {
+          if (soundEl && soundEl.components.sound) soundEl.components.sound.playSound();
+        });
+        el.addEventListener('touchstart', () => {
+          if (soundEl && soundEl.components.sound) soundEl.components.sound.playSound();
+        });
+      }
+    });
+
+    AFRAME.registerComponent('drag-rotate', {
+      init: function () {
+        this.isDragging = false;
+        this.previousX = 0;
+        const el = this.el;
+        el.sceneEl.canvas.addEventListener('touchstart', e => {
+          this.isDragging = true;
+          this.previousX = e.touches[0].pageX;
+        });
+        el.sceneEl.canvas.addEventListener('touchmove', e => {
+          if (!this.isDragging) return;
+          const currentX = e.touches[0].pageX;
+          const deltaX = currentX - this.previousX;
+          this.previousX = currentX;
+          let rotation = el.getAttribute('rotation');
+          rotation.y += deltaX * 0.5;
+          el.setAttribute('rotation', rotation);
+        });
+        el.sceneEl.canvas.addEventListener('touchend', e => {
+          this.isDragging = false;
+        });
+      }
+    });
+  </script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+  <a-scene embedded arjs>
+    <a-assets>
+      <a-asset-item id="mario1" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf"></a-asset-item>
+      <a-asset-item id="mario2" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf"></a-asset-item>
+      <a-asset-item id="mario3" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/FlightHelmet/glTF/FlightHelmet.gltf"></a-asset-item>
+    </a-assets>
+
+    <a-marker preset="hiro">
+
+      <a-entity position="-1 0 0" drag-rotate play-sound-on-click="soundId: soundS" scale="0.5 0.5 0.5" rotation="0 180 0">
+        <a-gltf-model src="#mario1"></a-gltf-model>
+        <a-text value="S" position="0 1.6 0" color="red" align="center" width="1.5"></a-text>
+      </a-entity>
+
+      <a-entity position="0 0 0" drag-rotate play-sound-on-click="soundId: soundD" scale="0.5 0.5 0.5" rotation="0 180 0">
+        <a-gltf-model src="#mario2"></a-gltf-model>
+        <a-text value="D" position="0 1.6 0" color="blue" align="center" width="1.5"></a-text>
+      </a-entity>
+
+      <a-entity position="1 0 0" drag-rotate play-sound-on-click="soundId: soundJ" scale="0.5 0.5 0.5" rotation="0 180 0">
+        <a-gltf-model src="#mario3"></a-gltf-model>
+        <a-text value="J" position="0 1.6 0" color="yellow" align="center" width="1.5"></a-text>
+      </a-entity>
+
+      <a-sound id="soundS" src="https://cdn.aframe.io/basic-guide/audio/boing.wav" preload="auto"></a-sound>
+      <a-sound id="soundD" src="https://cdn.aframe.io/basic-guide/audio/tick.wav" preload="auto"></a-sound>
+      <a-sound id="soundJ" src="https://cdn.aframe.io/basic-guide/audio/backgroundnoise.wav" preload="auto"></a-sound>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+</html>
